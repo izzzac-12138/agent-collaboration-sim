@@ -23,10 +23,10 @@ def _extract_state(model):
             - velocities: ndarray of shape (n_agents, 2)
             - graph: networkx.Graph
     """
-    agents = model.schedule.agents
+    agents = model.agents_list
     positions = np.array([a.pos for a in agents], dtype=float)
     velocities = np.array([a.velocity for a in agents], dtype=float)
-    graph = model.interaction_network
+    graph = model.network
     return positions, velocities, graph
 
 
@@ -69,8 +69,8 @@ def _update_main_plot(ax, model, step_count):
     )
 
     # Axis setup
-    ax.set_xlim(0, model.width)
-    ax.set_ylim(0, model.height)
+    ax.set_xlim(0, model.space.width)
+    ax.set_ylim(0, model.space.height)
     ax.set_aspect('equal')
     ax.set_title(f"Boid Simulation  |  step {step_count}", fontsize=12)
 
@@ -168,7 +168,7 @@ def save_snapshot(model, filepath):
     """
     fig, (ax_main, ax_network) = plt.subplots(1, 2, figsize=(14, 7))
 
-    step_count = model.schedule.steps if hasattr(model.schedule, 'steps') else 0
+    step_count = model.step_count
     _update_main_plot(ax_main, model, step_count)
     _update_network_plot(ax_network, model, step_count)
 
