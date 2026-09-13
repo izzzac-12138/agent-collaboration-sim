@@ -102,6 +102,17 @@ class BoidModel(mesa.Model):
             }
         )
 
+    def build_network(self) -> nx.Graph:
+        """Build the interaction network from current agent positions.
+
+        Returns the newly built NetworkX graph.
+        """
+        self.network = build_interaction_network(
+            self.agents_list, self.perception_radius,
+            self.space.width, self.space.height,
+        )
+        return self.network
+
     def step(self) -> None:
         """Execute one simulation step.
 
@@ -116,9 +127,7 @@ class BoidModel(mesa.Model):
             agent.step(self.weights)
 
         # Rebuild the interaction network from current positions
-        self.network = build_interaction_network(
-            self.agents_list, self.perception_radius
-        )
+        self.build_network()
 
         # Collect model-level metrics
         self.datacollector.collect(self)

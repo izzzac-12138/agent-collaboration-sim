@@ -29,11 +29,63 @@ def test_agent_initialization():
 
 
 def test_model_steps():
-    """Stepping the model increments step_count correctly."""
+    """Stepping the model increments step_count correctly (design requires 100 steps)."""
     model = BoidModel(n_agents=20)
-    for i in range(10):
+    for i in range(100):
         model.step()
-    assert model.step_count == 10
+    assert model.step_count == 100
+
+
+def test_separation_force():
+    """Separation force points away from nearby agents."""
+    model = BoidModel(n_agents=3, width=200, height=200,
+                      separation_radius=25, max_speed=2.0, max_force=0.3)
+    a0, a1, a2 = model.agents_list
+
+    # Place a1 very close to a0 (within separation radius)
+    a0.pos = np.array([100.0, 100.0])
+    a1.pos = np.array([105.0, 100.0])  # 5 units away, inside separation_radius
+    a2.pos = np.array([10.0, 10.0])    # far away, should not affect separation
+
+    sep = a0.separate([a1])
+    # Force should point away from a1: negative x direction
+    assert sep[0] < 0, f"Expected negative x separation, got {sep[0]}"
+    assert np.linalg.norm(sep) > 0, "Separation force should be non-zero"
+
+
+def test_alignment_force():
+    """Alignment force steers toward average neighbor velocity."""
+    model = BoidModel(n_agents=3, width=200, height=200,
+                      max_speed=2.0, max_force=0.3)
+    a0, a1, a2 = model.agents_list
+
+    # Set a0 velocity to zero, neighbors moving right
+    a0.velocity = np.array([0.0, 0.0])
+    a1.velocity = np.array([2.0, 0.0])
+    a2.velocity = np.array([2.0, 0.0])
+
+    ali = a0.align([a1, a2])
+    # Force should push a0 toward positive x (matching neighbors)
+    assert ali[0] > 0, f"Expected positive x alignment, got {ali[0]}"
+    assert np.linalg.norm(ali) > 0, "Alignment force should be non-zero"
+
+
+def test_cohesion_force():
+    """Cohesion force points toward center of mass of neighbors."""
+    model = BoidModel(n_agents=3, width=200, height=200,
+                      max_speed=2.0, max_force=0.3)
+    a0, a1, a2 = model.agents_list
+
+    # Place a0 at origin, neighbors far to the right
+    a0.pos = np.array([50.0, 100.0])
+    a1.pos = np.array([150.0, 100.0])
+    a2.pos = np.array([150.0, 100.0])
+    a0.velocity = np.array([0.0, 0.0])
+
+    coh = a0.cohere([a1, a2])
+    # Center of mass is at (150, 100), so force should point right
+    assert coh[0] > 0, f"Expected positive x cohesion, got {coh[0]}"
+    assert np.linalg.norm(coh) > 0, "Cohesion force should be non-zero"
 
 
 def test_boundary_wrapping():

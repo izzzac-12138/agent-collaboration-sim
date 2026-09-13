@@ -1,88 +1,53 @@
-"""Network construction utilities for the Boid simulation."""
+"""Network construction utilities for the Boid simulation.
+
+Uses toroidal (wrapping) distance to match the simulation's boundary handling,
+ensuring agents near opposite edges are correctly identified as neighbors.
+"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import networkx as nx
 import numpy as np
 
-if TYPE_CHECKING:
-    from ..core.agent import Agent
-
-try:
-    from scipy.spatial import KDTree
-except ImportError:
-    KDTree = None
-
 
 def build_interaction_network(
-    agents: list[Agent], radius: float
+    agents: list, radius: float, width: float = 200.0, height: float = 200.0
 ) -> nx.Graph:
     """Build an undirected graph connecting agents within *radius* of each other.
 
-    Nodes are agent unique_ids. Each edge stores a ``weight`` equal to
-    ``1.0 / distance`` (clamped with a small epsilon to avoid division by zero).
-
-    When :mod:`scipy.spatial` is available the function uses a KD-tree for
-    O(n log n) neighbor queries; otherwise it falls back to a brute-force
-    O(n^2) pairwise check.
+    Uses toroidal distance to be consistent with the Boid model's wrapping
+    boundary. Nodes are agent unique_ids. Each edge stores a ``weight``
+    equal to ``1.0 / distance`` (clamped with a small epsilon to avoid
+    division by zero).
     """
     g = nx.Graph()
     if not agents:
         return g
 
-    # Register every agent as a node (even if it has no neighbours).
     for a in agents:
         g.add_node(a.unique_id)
 
-    # Collect positions into a contiguous array for fast vectorised ops.
     positions = np.array([a.pos for a in agents], dtype=float)
     n = len(agents)
-
-    if KDTree is not None:
-        _build_kdtree(g, agents, positions, radius)
-    else:
-        _build_bruteforce(g, agents, positions, radius)
-
-    return g
-
-
-def _build_kdtree(
-    g: nx.Graph,
-    agents: list[Agent],
-    positions: np.ndarray,
-    radius: float,
-) -> None:
-    """Use scipy.spatial.KDTree for efficient neighbour search."""
-    tree = KDTree(positions)
-    # query_pairs returns a set of frozensets {(i, j), ...} with i < j.
-    pairs: set[tuple[int, int]] = tree.query_pairs(radius)  # type: ignore[assignment]
     eps = 1e-12
-    for i, j in pairs:
-        dist = float(np.linalg.norm(positions[i] - positions[j]))
-        g.add_edge(agents[i].unique_id, agents[j].unique_id, weight=1.0 / max(dist, eps))
 
-
-def _build_bruteforce(
-    g: nx.Graph,
-    agents: list[Agent],
-    positions: np.ndarray,
-    radius: float,
-) -> None:
-    """O(n^2) fallback when scipy is not installed."""
-    eps = 1e-12
-    n = len(agents)
     for i in range(n):
         for j in range(i + 1, n):
-            diff = positions[i] - positions[j]
-            dist = float(np.sqrt(diff @ diff))
+            # Toroidal shortest-distance vector
+            diff = positions[j] - positions[i]
+            diff[0] -= width * round(diff[0] / width)
+            diff[1] -= height * round(diff[1] / height)
+            dist = float(np.linalg.norm(diff))
             if dist <= radius:
                 g.add_edge(
                     agents[i].unique_id,
                     agents[j].unique_id,
                     weight=1.0 / max(dist, eps),
                 )
+
+    return g
 
 
 def network_stats(G: nx.Graph) -> dict[str, Any]:
