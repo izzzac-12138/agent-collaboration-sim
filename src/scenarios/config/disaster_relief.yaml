@@ -1,0 +1,49 @@
+scenario:
+  name: disaster_relief
+  description: "Post-disaster supply distribution simulation"
+
+parameters:
+  n_agents: 20
+  n_tasks: 15
+  n_resource_points: 5
+  width: 300.0
+  height: 300.0
+  max_steps: 200
+
+roles:
+  leader_ratio: 0.2
+  scout_ratio: 0.2
+  worker_ratio: 0.6
+
+resources:
+  types:
+    - food
+    - water
+    - medicine
+    - blankets
+  pool_amounts:
+    food: [5, 20]
+    water: [10, 30]
+    medicine: [2, 10]
+    blankets: [3, 15]
+
+tasks:
+  types:
+    - deliver_supply
+    - rescue_search
+    - setup_shelter
+    - medical_aid
+  required_resources:
+    deliver_supply: {food: 5, water: 5}
+    rescue_search: {}
+    setup_shelter: {blankets: 8}
+    medical_aid: {medicine: 3}
+
+communication:
+  template_library:
+    request: "Requesting {resource} for task {task_id}"
+    confirm: "Confirmed: will handle task {task_id}"
+    deny: "Cannot handle task {task_id} right now"
+    inform: "Available resources at location ({x}, {y})"
+    alert: "Alert: {message}"
+    resource_share: "Sharing {amount} {resource} with you"

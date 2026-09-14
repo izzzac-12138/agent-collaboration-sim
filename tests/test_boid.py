@@ -7,8 +7,8 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.models.boid_model import BoidModel
-from src.agents.boid_agent import BoidAgent
+from src.boid.models.boid_model import BoidModel
+from src.boid.agents.boid_agent import BoidAgent
 
 
 def test_model_creation():
