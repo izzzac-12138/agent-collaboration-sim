@@ -108,6 +108,7 @@ class CollaborationModel(mesa.Model):
 
         self._build_network()
         self.event_logger.log_step_summary(self)
+        self.event_logger.log_network_snapshot(self.network, self.step_count)
 
         if self.scenario is not None and self.scenario.check_completion(self):
             self.done = True

@@ -171,28 +171,36 @@ class EventLogger:
         return self._emit("resource_transferred", getattr(info, "from_agent", ""), payload, timestamp)
 
     def log_step_summary(self, model: Any) -> dict[str, Any]:
-        """Record a per-step summary of the simulation state.
+        """Record a per-step summary of the simulation state."""
+        tm = getattr(model, "task_manager", None)
+        all_tasks = tm.all_tasks() if tm else []
+        n_completed = sum(1 for t in all_tasks if t.status.value == "completed")
+        n_edges = model.network.number_of_nodes() if hasattr(model, "network") else 0
+        n_possible = n_edges * (n_edges - 1) / 2 if n_edges > 1 else 1
+        n_actual = model.network.number_of_edges() if hasattr(model, "network") else 0
+        density = n_actual / n_possible if n_possible > 0 else 0.0
 
-        Args:
-            model: A model object expected to expose ``step``,
-                ``communication_edges``, ``tasks`` (iterable of tasks),
-                and ``messages`` (iterable of messages).
-
-        Returns:
-            The emitted event dict.
-        """
-        tasks = getattr(model, "tasks", [])
-        messages = getattr(model, "messages", [])
         payload: dict[str, Any] = {
-            "step": getattr(model, "step", 0),
-            "edges": getattr(model, "communication_edges", []),
-            "tasks_total": len(list(tasks)),
-            "tasks_completed": sum(
-                1 for t in tasks if getattr(t, "status", "") == "completed"
-            ),
-            "message_count": len(list(messages)),
+            "step": model.step_count,
+            "n_edges": n_actual,
+            "network_density": density,
+            "tasks_total": len(all_tasks),
+            "tasks_completed": n_completed,
+            "tasks_pending": sum(1 for t in all_tasks if t.status.value == "pending"),
+            "n_agents": len(getattr(model, "agents_list", [])),
         }
-        return self._emit("step_summary", "", payload)
+        return self._emit("step_summary", "", payload, model.step_count)
+
+    def log_network_snapshot(self, network: Any, timestamp: int = 0) -> dict[str, Any]:
+        """Record the current proximity network topology."""
+        import networkx as nx
+        edges = list(network.edges())
+        payload: dict[str, Any] = {
+            "n_nodes": network.number_of_nodes(),
+            "n_edges": len(edges),
+            "edges": [(str(u), str(v)) for u, v in edges[:100]],  # cap at 100 for log size
+        }
+        return self._emit("network_snapshot", "", payload, timestamp)
 
     # ------------------------------------------------------------------
     # Query helpers

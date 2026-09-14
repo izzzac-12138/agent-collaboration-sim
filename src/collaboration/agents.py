@@ -151,12 +151,24 @@ class CollaborativeAgent(mesa.Agent):
 
             elif action_type == "transfer_resource":
                 target_id = action.get("target")
-                resource = action.get("resource")
-                if target_id is not None and resource is not None:
-                    resource_pool.transfer(
-                        source=self.unique_id,
-                        target=target_id,
-                        resource=resource,
+                resource_id = action.get("resource_id")
+                amount = action.get("amount", 1.0)
+                if target_id is not None and resource_id is not None:
+                    new_res = resource_pool.transfer(
+                        resource_id=resource_id,
+                        from_agent=str(self.unique_id),
+                        to_agent=str(target_id),
+                        amount=amount,
+                    )
+                    self.model.event_logger.log_resource_transferred(
+                        {
+                            "from_agent": str(self.unique_id),
+                            "to_agent": str(target_id),
+                            "resource_id": resource_id,
+                            "resource_type": new_res.resource_type if new_res else "",
+                            "amount": amount,
+                        },
+                        self.model.step_count,
                     )
 
     # ------------------------------------------------------------------
