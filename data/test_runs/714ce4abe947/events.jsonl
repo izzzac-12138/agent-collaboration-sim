@@ -1,4 +1,0 @@
-{"event_type": "agent_step", "agent_id": 1, "payload": {"role": "worker", "tasks_completed": 0, "messages_sent": 0, "resources_acquired": 0}, "timestamp": "2026-09-14T13:02:36.661364"}
-{"event_type": "agent_step", "agent_id": 2, "payload": {"role": "worker", "tasks_completed": 0, "messages_sent": 0, "resources_acquired": 0}, "timestamp": "2026-09-14T13:02:36.661372"}
-{"event_type": "agent_step", "agent_id": 3, "payload": {"role": "worker", "tasks_completed": 0, "messages_sent": 0, "resources_acquired": 0}, "timestamp": "2026-09-14T13:02:36.661376"}
-{"event_type": "agent_step", "agent_id": 4, "payload": {"role": "worker", "tasks_completed": 0, "messages_sent": 0, "resources_acquired": 0}, "timestamp": "2026-09-14T13:02:36.661380"}

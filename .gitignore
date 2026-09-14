@@ -40,3 +40,8 @@ Thumbs.db
 .env
 *.log
 data/*.json
+
+# Run data
+data/experiments/
+data/runs/
+data/test_runs/
