@@ -137,14 +137,16 @@ class CollaborativeAgent(mesa.Agent):
             if action_type == "complete_task":
                 task_id = action.get("task_id")
                 if task_id is not None:
-                    task_mgr.complete_task(task_id, agent=self)
+                    task = task_mgr.complete_task(task_id)
                     self.tasks_completed += 1
+                    self.model.event_logger.log_task_completed(
+                        task, self.model.step_count
+                    )
 
             elif action_type == "fail_task":
                 task_id = action.get("task_id")
-                reason = action.get("reason", "unspecified")
                 if task_id is not None:
-                    task_mgr.fail_task(task_id, agent=self, reason=reason)
+                    task = task_mgr.fail_task(task_id)
                     self.tasks_failed += 1
 
             elif action_type == "transfer_resource":
@@ -178,13 +180,18 @@ class CollaborativeAgent(mesa.Agent):
             if action.get("action") == "send_message":
                 target = action.get("to")
                 content = action.get("content", "")
-                if target is not None:
-                    commbus.send(
-                        sender=self.unique_id,
-                        receiver=target,
-                        content=content,
-                    )
-                    self.messages_sent += 1
+                msg_type = action.get("msg_type", "inform")
+                message = commbus.create_and_send(
+                    from_agent=str(self.unique_id),
+                    to_agent=str(target) if target is not None else None,
+                    msg_type=msg_type,
+                    content=content,
+                    timestamp=self.model.step_count,
+                )
+                self.messages_sent += 1
+                self.model.event_logger.log_message_sent(
+                    message, self.model.step_count
+                )
 
     # ------------------------------------------------------------------
     # Logging

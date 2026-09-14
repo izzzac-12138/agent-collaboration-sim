@@ -83,13 +83,28 @@ class CollaborationModel(mesa.Model):
     def step(self) -> None:
         """Advance the model by one tick.
 
-        Executes every agent's ``step``, rebuilds the proximity network,
-        logs a step summary, and checks for scenario completion.
+        Executes every agent's decision cycle (perceive -> decide -> act ->
+        communicate -> log).  When a scenario is attached, its
+        ``agent_decide`` method supplies domain-specific actions that are
+        merged with the agent's own base decisions.
         """
         self.step_count += 1
 
         for agent in self.agents_list:
-            agent.step()
+            agent.perceive()
+            # Base decisions from the agent class itself (often empty).
+            base_actions = agent.decide()
+            # Scenario-specific actions (the real decision logic).
+            if self.scenario is not None:
+                scenario_actions = self.scenario.agent_decide(agent, self)
+            else:
+                scenario_actions = []
+            # Merge: scenario actions take precedence, then base actions.
+            actions = scenario_actions + [a for a in base_actions
+                                          if a not in scenario_actions]
+            agent.act(actions)
+            agent.communicate(actions)
+            agent.log_step()
 
         self._build_network()
         self.event_logger.log_step_summary(self)

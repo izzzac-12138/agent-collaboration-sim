@@ -78,6 +78,10 @@ class SimulationRunner:
             height=self.height,
         )
 
+        # Point the event logger to the run-specific output directory.
+        run_dir = os.path.join(self.output_dir, run_id)
+        model.event_logger._output_dir = run_dir
+
         steps_completed: int = 0
         for _ in range(max_steps):
             if model.done:

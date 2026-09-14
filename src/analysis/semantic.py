@@ -147,6 +147,53 @@ class SemanticAnalyzer:
         self.messages_df["topic_cluster"] = kmeans.fit_predict(embeddings)
         return self.messages_df
 
+    def compare_success_vs_failure(
+        self, events_df: pd.DataFrame
+    ) -> dict:
+        """Compare communication patterns between successful and failed periods.
+
+        Identifies time windows where tasks were completed (success) vs
+        failed, then compares vocabulary richness, message length, and
+        topic focus between the two groups.
+        """
+        if self.messages_df.empty:
+            return {"success_messages": 0, "failure_messages": 0}
+
+        # Find success and failure time windows from task events.
+        completed = events_df[events_df["event_type"] == "task_completed"]
+        failed = events_df[events_df["event_type"] == "task_failed"]
+
+        success_times = set(completed["timestamp"].astype(int).tolist()) if not completed.empty else set()
+        failure_times = set(failed["timestamp"].astype(int).tolist()) if not failed.empty else set()
+
+        # Classify messages by nearby event type (within ±2 steps).
+        def _nearby(timestamps_set: set, t: int) -> bool:
+            return any(abs(t - s) <= 2 for s in timestamps_set)
+
+        success_msgs = self.messages_df[
+            self.messages_df["timestamp"].apply(lambda t: _nearby(success_times, int(t)))
+        ]
+        failure_msgs = self.messages_df[
+            self.messages_df["timestamp"].apply(lambda t: _nearby(failure_times, int(t)))
+        ]
+
+        def _msg_stats(msgs: pd.DataFrame) -> dict:
+            if msgs.empty:
+                return {"count": 0, "vocab_richness": 0.0, "avg_length": 0.0, "top_words": []}
+            all_words = " ".join(msgs["content"]).lower().split()
+            vocab = set(all_words)
+            return {
+                "count": len(msgs),
+                "vocab_richness": len(vocab) / max(len(all_words), 1),
+                "avg_length": float(msgs["content"].str.len().mean()),
+                "top_words": list(vocab)[:10],
+            }
+
+        return {
+            "success": _msg_stats(success_msgs),
+            "failure": _msg_stats(failure_msgs),
+        }
+
     def get_discussion_summary(self) -> dict:
         """Overall communication pattern summary."""
         if self.messages_df.empty:

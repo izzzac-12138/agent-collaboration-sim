@@ -323,8 +323,6 @@ class DisasterReliefScenario(ScenarioBase):
                 if self._has_all_resources(agent, task):
                     self._deduct_cached_resources(agent, task)
                     task_id = task.task_id
-                    tm.complete_task(task_id)
-                    agent.tasks_completed += 1
                     actions.append(
                         {
                             "action": "complete_task",

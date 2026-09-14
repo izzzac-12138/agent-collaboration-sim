@@ -108,6 +108,64 @@ class InformationTracer:
         ]).sort_values("betweenness_centrality", ascending=False).reset_index(drop=True)
         return df
 
+    def compute_propagation_speed(self, source_agent: str) -> dict:
+        """Compute information propagation speed metrics."""
+        trace = self.trace_information(source_agent)
+        timeline = trace["propagation_timeline"]
+        if not timeline:
+            return {"avg_speed": 0.0, "max_hops_per_step": 0.0, "total_time": 0}
+
+        timestamps = [t[0] for t in timeline]
+        hops = [t[2] for t in timeline]
+        total_time = max(timestamps) - min(timestamps) if len(timestamps) > 1 else 1
+        avg_speed = sum(hops) / max(total_time, 1)
+
+        return {
+            "avg_speed": avg_speed,
+            "max_hops_per_step": max(hops) / max(total_time, 1),
+            "total_time": total_time,
+            "agents_reached_per_step": len(timeline) / max(total_time, 1),
+        }
+
+    def compute_information_distortion(
+        self, source_agent: str, keyword: str = ""
+    ) -> dict:
+        """Measure how much information degrades as it propagates.
+
+        Compares the original message content from the source with messages
+        forwarded by intermediate agents.  Distortion is measured as the
+        fraction of keyword overlap lost at each hop.
+        """
+        msgs = self.events_df[self.events_df["event_type"] == "message_sent"]
+        if msgs.empty:
+            return {"avg_distortion": 0.0, "max_distortion": 0.0, "n_hops_analyzed": 0}
+
+        source_keywords: set[str] = set()
+        hop_distortions: list[float] = []
+
+        for _, row in msgs.iterrows():
+            payload = row["payload"] if isinstance(row["payload"], dict) else {}
+            frm = payload.get("from_agent") or row.get("agent_id", "")
+            content = payload.get("content", "")
+            words = set(content.lower().split())
+
+            if frm == source_agent:
+                source_keywords = words
+                continue
+
+            if source_keywords and words:
+                overlap = len(source_keywords & words) / max(len(source_keywords), 1)
+                hop_distortions.append(1.0 - overlap)
+
+        if not hop_distortions:
+            return {"avg_distortion": 0.0, "max_distortion": 0.0, "n_hops_analyzed": 0}
+
+        return {
+            "avg_distortion": float(np.mean(hop_distortions)),
+            "max_distortion": float(np.max(hop_distortions)),
+            "n_hops_analyzed": len(hop_distortions),
+        }
+
     def compute_information_value(
         self, source_agent: str, task_completion_events: pd.DataFrame
     ) -> dict:

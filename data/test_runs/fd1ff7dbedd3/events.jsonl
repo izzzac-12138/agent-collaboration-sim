@@ -1,0 +1,10 @@
+{"event_type": "scenario_setup", "agent_id": "", "payload": {"scenario": "DisasterRelief", "n_tasks": 3, "n_resource_points": 5, "resource_types": ["food", "water", "medicine", "blankets"]}, "timestamp": "2026-09-14T13:02:37.251857"}
+{"event_type": "message_sent", "agent_id": "", "payload": {"sender": "", "receiver": "", "msg_type": "inform", "content": "Task T002 (blanket_delivery) assigned to you. Requires: 2 water, 4 food, 1 blankets. Priority: 5."}, "timestamp": 1}
+{"event_type": "message_sent", "agent_id": "", "payload": {"sender": "", "receiver": "", "msg_type": "inform", "content": "Task T003 (food_delivery) assigned to you. Requires: 5 food, 5 medicine. Priority: 5."}, "timestamp": 1}
+{"event_type": "message_sent", "agent_id": "", "payload": {"sender": "", "receiver": "", "msg_type": "inform", "content": "Task T001 (medical_evacuation) assigned to you. Requires: 4 blankets, 5 water, 2 food. Priority: 3."}, "timestamp": 1}
+{"event_type": "agent_step", "agent_id": 1, "payload": {"role": "leader", "tasks_completed": 0, "messages_sent": 3, "resources_acquired": 0}, "timestamp": "2026-09-14T13:02:37.251931"}
+{"event_type": "message_sent", "agent_id": "", "payload": {"sender": "", "receiver": "", "msg_type": "inform", "content": "Resource status — blankets: 68 units available; food: 54 units available; medicine: 54 units available; water: 76 units available"}, "timestamp": 1}
+{"event_type": "agent_step", "agent_id": 2, "payload": {"role": "scout", "tasks_completed": 0, "messages_sent": 1, "resources_acquired": 0}, "timestamp": "2026-09-14T13:02:37.251958"}
+{"event_type": "agent_step", "agent_id": 3, "payload": {"role": "worker", "tasks_completed": 0, "messages_sent": 0, "resources_acquired": 0}, "timestamp": "2026-09-14T13:02:37.251976"}
+{"event_type": "agent_step", "agent_id": 4, "payload": {"role": "worker", "tasks_completed": 0, "messages_sent": 0, "resources_acquired": 0}, "timestamp": "2026-09-14T13:02:37.251989"}
+{"event_type": "agent_step", "agent_id": 5, "payload": {"role": "worker", "tasks_completed": 0, "messages_sent": 0, "resources_acquired": 0}, "timestamp": "2026-09-14T13:02:37.252003"}
