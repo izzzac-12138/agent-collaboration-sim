@@ -77,7 +77,7 @@ class EventLogger:
             "messages_sent": getattr(agent, "messages_sent", 0),
             "resources_acquired": getattr(agent, "resources_acquired", 0),
         }
-        return self._emit("agent_step", agent.agent_id, payload)
+        return self._emit("agent_step", agent.unique_id, payload)
 
     def log_task_created(self, task: Any, timestamp: Optional[str] = None) -> dict[str, Any]:
         """Record task creation.

@@ -65,10 +65,10 @@ class CollaborationModel(mesa.Model):
         self.done: bool = False
 
         # Agent creation -------------------------------------------------------
-        for _ in range(n_agents):
+        for i in range(n_agents):
             x = self.random.uniform(0, width)
             y = self.random.uniform(0, height)
-            agent = CollaborativeAgent(self)
+            agent = CollaborativeAgent(self, unique_id=f"agent_{i}")
             self.space.place_agent(agent, (x, y))
             self.agents_list.append(agent)
 

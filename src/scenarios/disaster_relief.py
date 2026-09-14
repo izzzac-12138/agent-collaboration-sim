@@ -141,14 +141,13 @@ class DisasterReliefScenario(ScenarioBase):
                     ),
                 )
 
-        model.event_logger.log_event(
-            {
-                "type": "scenario_setup",
+        model.event_logger._emit(
+            "scenario_setup", "", {
                 "scenario": self.get_name(),
                 "n_tasks": self.n_tasks,
                 "n_resource_points": self.n_resource_points,
                 "resource_types": list(self.resource_types),
-            }
+            }, model.step_count
         )
 
     # ------------------------------------------------------------------
